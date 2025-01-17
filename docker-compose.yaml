@@ -1,0 +1,33 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    command:
+      - --config.file=/etc/prometheus.yaml
+      - --web.enable-lifecycle
+      - --web.route-prefix=/
+      - --web.enable-otlp-receiver
+    volumes:
+      - "./prometheus.yaml:/etc/prometheus.yaml"
+    ports:
+      - 9090:9090
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    depends_on:
+      - prometheus
+    volumes:
+      - "./collector.yaml:/etc/collector.yaml"
+    command: [ "--config=/etc/collector.yaml" ]
+    ports:
+      - 4317:4317
+      - 4318:4318
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+#    environment:
+#      - "GF_INSTALL_PLUGINS=grafana-opensearch-datasource"
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+#      - ./src/grafana/provisioning/:/etc/grafana/provisioning/
+    ports:
+      - 3000:3000
